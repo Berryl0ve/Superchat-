@@ -2,92 +2,221 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Secure Student Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Webex Lite</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    /* Modern Webex-style UI with Light/Dark CSS Variables */
+    :root {
+      --primary: #005EAD;
+      --bg: #e5e5e5;
+      --sidebar-bg: #F7F8FA;
+      --sidebar-hover: #E8EBF1;
+      --chat-bg: #FFFFFF;
+      --text-main: #1A1A1A;
+      --text-muted: #666666;
+      --admin-red: #D92D20;
+      --input-bg: #ffffff;
+      --input-border: #dddddd;
+    }
     
-    .container { width: 100%; max-width: 500px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 80vh; overflow: hidden; }
+    /* Dark Mode Overrides */
+    body.dark-mode {
+      --bg: #111111;
+      --sidebar-bg: #1A1B1E;
+      --sidebar-hover: #2C2D31;
+      --chat-bg: #242529;
+      --text-main: #E4E5E7;
+      --text-muted: #9CA3AF;
+      --input-bg: #333333;
+      --input-border: #444444;
+    }
     
-    /* Auth Screen */
-    #auth-screen { display: flex; flex-direction: column; padding: 40px; text-align: center; margin-top: 10%; }
-    #auth-screen input { padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; transition: background-color 0.3s; }
+    
+    /* Login Screen */
+    #auth-screen { width: 100%; max-width: 400px; background: var(--chat-bg); border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; padding: 40px; text-align: center; }
+    #auth-screen h1 { margin-top: 0; color: var(--primary); font-size: 28px; margin-bottom: 5px; }
+    #auth-screen p { color: var(--text-muted); margin-bottom: 25px; }
+    #auth-screen input { padding: 14px; margin-bottom: 12px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); border-radius: 8px; font-size: 16px; outline: none; }
+    #auth-screen input:focus { border-color: var(--primary); }
     .auth-btn-row { display: flex; gap: 10px; margin-top: 10px; }
-    .auth-btn-row button { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; color: white; }
-    #login-btn { background: #0084ff; }
-    #signup-btn { background: #333; }
-    #auth-error { color: red; font-size: 13px; margin-top: 15px; }
-    
-    /* Chat Screen */
-    #chat-screen { display: none; flex-direction: column; height: 100%; }
-    
-    /* Top Bar */
-    #top-bar { background: #0084ff; color: white; padding: 15px; display: flex; gap: 10px; align-items: center; }
-    #top-bar input { flex-grow: 1; padding: 8px; border-radius: 5px; border: none; outline: none; }
-    #start-chat-btn { padding: 8px 15px; background: white; color: #0084ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    #logout-btn { padding: 8px 10px; background: #ff3b30; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    
-    /* Messages */
-    #messages { flex-grow: 1; padding: 20px; overflow-y: auto; background: #fff; display: flex; flex-direction: column; }
-    .message { margin-bottom: 10px; padding: 10px 15px; border-radius: 15px; width: fit-content; max-width: 75%; word-wrap: break-word; }
-    .sent { background: #0084ff; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-    .received { background: #e4e6eb; color: black; align-self: flex-start; border-bottom-left-radius: 2px; }
-    .sender-name { font-size: 11px; margin-bottom: 3px; opacity: 0.7; }
+    .auth-btn-row button { flex: 1; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; color: white; }
+    #login-btn { background: var(--primary); }
+    #signup-btn { background: #555; }
+    #auth-error { color: var(--admin-red); font-size: 13px; margin-top: 15px; min-height: 1.2em; }
+    #username-hint { font-size: 12px; color: var(--text-muted); text-align: left; margin: -8px 0 12px 5px; }
 
-    /* Input Box */
-    #input-area { display: flex; padding: 15px; background: #f0f2f5; border-top: 1px solid #ddd; }
-    #message-input { flex-grow: 1; padding: 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
-    #send-btn { padding: 10px 20px; margin-left: 10px; background: #0084ff; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
-    #send-btn:disabled { background: #ccc; cursor: not-allowed; }
+    /* Main App Layout */
+    #app-screen { display: none; width: 100%; max-width: 1200px; height: 100vh; background: var(--chat-bg); box-shadow: 0 0 20px rgba(0,0,0,0.3); }
+    @media (min-width: 768px) { #app-screen { height: 90vh; border-radius: 12px; overflow: hidden; } }
+    
+    .app-container { display: flex; height: 100%; width: 100%; }
+
+    /* Sidebar */
+    #sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid var(--input-border); display: flex; flex-direction: column; transition: background-color 0.3s; }
+    .sidebar-header { padding: 20px 15px; border-bottom: 1px solid var(--input-border); background: var(--chat-bg); position: relative; }
+    .sidebar-header h2 { margin: 0; font-size: 18px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+    
+    #theme-toggle { position: absolute; top: 18px; right: 15px; background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-muted); }
+    
+    .user-profile { font-size: 13px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
+    
+    #admin-panel-btn { display: none; margin-top: 10px; width: 100%; padding: 8px; background: var(--admin-red); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    #admin-code-display { display: none; margin-top: 10px; padding: 8px; background: #222; color: #00FF00; border-radius: 6px; text-align: center; font-family: monospace; font-size: 14px; font-weight: bold; letter-spacing: 2px;}
+
+    .room-actions { padding: 15px; }
+    .room-actions button { width: 100%; padding: 10px; background: var(--chat-bg); color: var(--text-main); border: 1px solid var(--input-border); border-radius: 6px; cursor: pointer; font-weight: 600; margin-bottom: 5px; transition: 0.2s; }
+    .room-actions button:hover { background: var(--sidebar-hover); }
+
+    .room-list-container { flex-grow: 1; overflow-y: auto; padding: 10px; }
+    .room-category { font-size: 11px; text-transform: uppercase; font-weight: bold; color: var(--text-muted); margin: 15px 0 5px 10px; letter-spacing: 0.5px; }
+    .room-item { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 15px; color: var(--text-main); font-weight: 500; margin-bottom: 2px; transition: background 0.1s; }
+    .room-item:hover { background: var(--sidebar-hover); }
+    .room-item.active { background: var(--primary); color: white; font-weight: 600; }
+
+    #logout-btn { margin: 15px; padding: 10px; background: transparent; border: 1px solid var(--input-border); border-radius: 6px; cursor: pointer; color: var(--text-muted); font-weight: bold; }
+    #logout-btn:hover { background: var(--sidebar-hover); }
+
+    /* Main Chat Area */
+    #main-chat { flex-grow: 1; display: flex; flex-direction: column; background: var(--chat-bg); transition: background-color 0.3s; position: relative; }
+    #chat-header { padding: 20px; border-bottom: 1px solid var(--input-border); background: var(--chat-bg); }
+    #chat-header h3 { margin: 0; font-size: 18px; color: var(--text-main); }
+    #chat-header p { margin: 2px 0 0 0; font-size: 13px; color: var(--text-muted); }
+
+    #messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+    .empty-state { margin: auto; text-align: center; color: var(--text-muted); }
+    
+    .message { margin-bottom: 12px; display: flex; flex-direction: column; max-width: 75%; }
+    .message.sent { align-self: flex-end; }
+    .message.received { align-self: flex-start; }
+    
+    .sender-name { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; margin-left: 2px; }
+    .message-bubble { padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+    
+    .sent .message-bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+    .received .message-bubble { background: var(--sidebar-hover); color: var(--text-main); border-bottom-left-radius: 4px; }
+    
+    /* System/Admin Warning Message */
+    .message.system { align-self: center; max-width: 90%; width: 100%; margin: 15px 0; }
+    .system .message-bubble { background: #FEF3F2; color: var(--admin-red); border: 1px solid #FEE4E2; border-radius: 8px; font-weight: 600; text-align: center; }
+
+    #chat-error { display: none; background: #FEF3F2; color: var(--admin-red); padding: 10px; text-align: center; font-size: 14px; font-weight: bold; border-top: 1px solid var(--input-border); }
+    body.dark-mode #chat-error { background: #3b1a1a; }
+
+    #input-area { padding: 20px; background: var(--chat-bg); border-top: 1px solid var(--input-border); display: flex; gap: 10px; }
+    #message-input { flex-grow: 1; padding: 14px 20px; border: 1px solid var(--input-border); border-radius: 24px; outline: none; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
+    #message-input:focus { border-color: var(--primary); }
+    #send-btn { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 24px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+    #send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    #admin-warning-btn { display: none; padding: 12px; background: var(--admin-red); color: white; border: none; border-radius: 24px; cursor: pointer; font-weight: bold; }
+
+    /* Modals */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+    .modal { background: var(--chat-bg); padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; color: var(--text-main); }
+    .modal h3 { margin-top: 0; }
+    .modal input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); border-radius: 6px; font-size: 15px; outline: none; }
+    .modal input:focus { border-color: var(--primary); }
+    .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+    .modal-btns button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-cancel { background: var(--sidebar-hover); color: var(--text-main); }
+    .btn-confirm { background: var(--primary); color: white; }
+    
+    /* Admin Dashboard Modal */
+    #admin-dashboard { max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .admin-list-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--input-border); align-items: center;}
+    .ban-btn { background: var(--admin-red); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    .unban-btn { background: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen">
+    <h1>Webex Lite</h1>
+    <p>Secure Student Communication</p>
     
-    <div id="auth-screen">
-      <h2>Webex Lite Security</h2>
-      <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Sign up with an email to lock your username.</p>
-      
-      <input type="email" id="email-input" placeholder="Email (e.g., jack@school.edu)">
-      <input type="password" id="password-input" placeholder="Password (at least 6 chars)">
-      
-      <div class="auth-btn-row">
-        <button id="login-btn">Log In</button>
-        <button id="signup-btn">Sign Up</button>
-      </div>
-      <p id="auth-error"></p>
-    </div>
+    <input type="text" id="username-input" placeholder="Choose Username (e.g. nathan)">
+    <div id="username-hint">↑ Required for new accounts</div>
 
-    <div id="chat-screen">
-      <div id="top-bar">
-        <span>To:</span>
-        <input type="text" id="friend-username" placeholder="Friend's name (e.g., jack)">
-        <button id="start-chat-btn">Chat</button>
-        <button id="logout-btn">Exit</button>
-      </div>
-      
-      <div id="messages"></div>
-      
-      <div id="input-area">
-        <input type="text" id="message-input" placeholder="Type a message..." disabled>
-        <button id="send-btn" disabled>Send</button>
-      </div>
+    <input type="email" id="email-input" placeholder="School Email">
+    <input type="password" id="password-input" placeholder="Password (6+ chars)">
+    
+    <div class="auth-btn-row">
+      <button id="login-btn">Log In</button>
+      <button id="signup-btn">Sign Up</button>
     </div>
+    <p id="auth-error"></p>
+  </div>
 
+  <!-- MAIN APP -->
+  <div id="app-screen">
+    <div class="app-container">
+      
+      <!-- SIDEBAR -->
+      <div id="sidebar">
+        <div class="sidebar-header">
+          <h2>Webex Lite</h2>
+          <button id="theme-toggle">🌙</button>
+          <div class="user-profile">Logged in as: <span id="my-username-display"></span></div>
+          <button id="admin-panel-btn">⚙️ Developer Panel</button>
+          <div id="admin-code-display">Code: ----</div>
+        </div>
+        
+        <div class="room-actions">
+          <button id="new-dm-btn">⊕ New Direct Message</button>
+          <button id="new-group-btn">⊕ Join/Create Group</button>
+        </div>
+
+        <div class="room-list-container">
+          <div class="room-category">Direct Messages</div>
+          <div id="dm-list"></div>
+          
+          <div class="room-category">Spaces (Groups)</div>
+          <div id="group-list"></div>
+        </div>
+
+        <button id="logout-btn">Log Out</button>
+      </div>
+
+      <!-- MAIN CHAT -->
+      <div id="main-chat">
+        <div id="chat-header">
+          <h3 id="current-room-name">Welcome to Webex Lite</h3>
+          <p id="current-room-type">Select a room from the sidebar to start messaging.</p>
+        </div>
+        
+        <div id="messages">
+          <div class="empty-state">No chat selected</div>
+        </div>
+        
+        <div id="chat-error">Message blocked: Please use kind and appropriate language.</div>
+        
+        <div id="input-area">
+          <input type="text" id="message-input" placeholder="Message..." disabled>
+          <button id="admin-warning-btn">⚠ Issue Warning</button>
+          <button id="send-btn" disabled>Send</button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-    
-    // NEW: We imported the Authentication tools!
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getDatabase, ref, push, onChildAdded, off, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    // --- PASTE YOUR FIREBASE CONFIG HERE ---
-        const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "superchat-2f8ba.firebaseapp.com", // <-- ADD THIS LINE
+    // ==========================================
+    // 🛑 IMPORTANT: SET YOUR ADMIN EMAIL HERE 🛑
+    // ==========================================
+    const ADMIN_EMAIL = "developer@school.edu"; 
+    // ^^^ Change "developer@school.edu" to your exact login email ^^^
+
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBe2rtzWO8-WxJA1oOveX8OmnypiAT1et0",
+      authDomain: "superchat-2f8ba.firebaseapp.com",
       databaseURL: "https://superchat-2f8ba-default-rtdb.firebaseio.com",
       projectId: "superchat-2f8ba",
       storageBucket: "superchat-2f8ba.firebasestorage.app",
@@ -95,113 +224,325 @@
       appId: "1:484473938445:web:8a5ce451600707b8bdeb44"
     };
 
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const auth = getAuth(app); // Starts the security engine
+    const auth = getAuth(app);
 
+    // --- AUTO-FILTER DICTIONARY ---
+    const blockedWords = [
+        "fuck", "shit", "bitch", "asshole", "crap", "damn", "dick", "pussy", "slut", "whore", "cunt", "fag", "faggot", "nigger", "nigga",
+        "stupid", "idiot", "ugly", "loser", "dumb", "dumbass", "kys", "kill yourself", "die", "hate you", "nobody likes you", "fat", "freak"
+    ];
+
+    function containsBadWords(text) {
+        const lowerText = text.toLowerCase();
+        for (let word of blockedWords) {
+            const regex = new RegExp(`\\b${word}\\b`, 'i');
+            if (regex.test(lowerText)) return true;
+            if (word.includes(" ") && lowerText.includes(word)) return true;
+        }
+        return false;
+    }
+
+    function showChatError(message) {
+        const errorDiv = document.getElementById("chat-error");
+        errorDiv.innerText = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => { errorDiv.style.display = "none"; }, 3500); 
+    }
+
+    // Master Variables
     let myName = "";
-    let friendName = "";
+    let myEmail = "";
+    let isAdmin = false;
+    let currentRoomId = null;
     let currentRoomRef = null;
-
+    
     // UI Elements
     const authScreen = document.getElementById("auth-screen");
-    const chatScreen = document.getElementById("chat-screen");
-    const emailInput = document.getElementById("email-input");
-    const passwordInput = document.getElementById("password-input");
+    const appScreen = document.getElementById("app-screen");
     const authError = document.getElementById("auth-error");
     const messagesDiv = document.getElementById("messages");
     const messageInput = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
+    
+    // --- DARK MODE LOGIC ---
+    const themeToggle = document.getElementById("theme-toggle");
+    if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark-mode");
+        themeToggle.innerText = "☀️";
+    }
+    themeToggle.onclick = () => {
+        document.body.classList.toggle("dark-mode");
+        localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+        themeToggle.innerText = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
+    };
 
-    // --- 1. SIGN UP LOGIC ---
-    document.getElementById("signup-btn").addEventListener("click", () => {
-      createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value)
-        .catch(error => { authError.innerText = error.message; }); // Shows error if password is too short, etc.
-    });
+    // --- SECURITY CODE LOGIC ---
+    function getSecurityCode() {
+        const timeWindow = Math.floor(Date.now() / (4 * 60 * 60 * 1000));
+        const seed = timeWindow * 9876;
+        return ((seed % 9000) + 1000).toString(); 
+    }
+    setInterval(() => {
+        if (isAdmin) document.getElementById("admin-code-display").innerText = "Group Code: " + getSecurityCode();
+    }, 60000);
 
-    // --- 2. LOG IN LOGIC ---
-    document.getElementById("login-btn").addEventListener("click", () => {
-      signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value)
-        .catch(error => { authError.innerText = "Invalid email or password."; });
-    });
+    // --- 1. AUTHENTICATION & SECURITY ---
+    document.getElementById("signup-btn").onclick = () => {
+      const desiredName = document.getElementById("username-input").value.trim().toLowerCase();
+      const email = document.getElementById("email-input").value.trim();
+      const pass = document.getElementById("password-input").value;
 
-    // --- 3. LOG OUT LOGIC ---
-    document.getElementById("logout-btn").addEventListener("click", () => {
-      signOut(auth);
-    });
+      if (!desiredName) { authError.innerText = "Username required for signup!"; return; }
 
-    // --- 4. THE MAGIC WATCHER ---
-    // This constantly checks if the user is successfully logged in or logged out
-    onAuthStateChanged(auth, (user) => {
+      authError.innerText = "Creating account...";
+      createUserWithEmailAndPassword(auth, email, pass)
+        .then((cred) => {
+            updateProfile(cred.user, { displayName: desiredName });
+            set(ref(db, 'users/' + desiredName), { email: email, banned: false });
+        })
+        .catch(err => authError.innerText = err.message);
+    };
+
+    document.getElementById("login-btn").onclick = () => {
+      authError.innerText = "Loading...";
+      signInWithEmailAndPassword(auth, document.getElementById("email-input").value, document.getElementById("password-input").value)
+        .catch(err => authError.innerText = "Invalid credentials.");
+    };
+
+    document.getElementById("logout-btn").onclick = () => signOut(auth);
+
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is IN!
+        myName = user.displayName ? user.displayName.toLowerCase() : user.email.split('@')[0].toLowerCase();
+        myEmail = user.email.toLowerCase();
+        
+        try {
+            const userStatus = await get(ref(db, 'users/' + myName + '/banned'));
+            if (userStatus.exists() && userStatus.val() === true) {
+                signOut(auth);
+                alert("Your account has been suspended by the Developer.");
+                return;
+            }
+        } catch(e) {
+            console.warn("Could not check ban status, continuing login.");
+        }
+
+        // Check if the logged-in email matches the ADMIN_EMAIL we set at the top
+        if (myEmail === ADMIN_EMAIL.toLowerCase()) {
+            isAdmin = true;
+            document.getElementById("admin-panel-btn").style.display = "block";
+            document.getElementById("admin-code-display").style.display = "block";
+            document.getElementById("admin-code-display").innerText = "Group Code: " + getSecurityCode();
+            document.getElementById("admin-warning-btn").style.display = "block";
+            document.getElementById("my-username-display").innerHTML = "<b>Developer</b>";
+        } else {
+            isAdmin = false;
+            document.getElementById("admin-panel-btn").style.display = "none";
+            document.getElementById("admin-code-display").style.display = "none";
+            document.getElementById("admin-warning-btn").style.display = "none";
+            document.getElementById("my-username-display").innerText = myName;
+        }
+
         authScreen.style.display = "none";
-        chatScreen.style.display = "flex";
-        
-        // Grab the part before the '@' symbol to be their username
-        myName = user.email.split('@')[0].toLowerCase();
-        
-        // Clear out the auth text boxes for security
-        emailInput.value = "";
-        passwordInput.value = "";
-        authError.innerText = "";
+        appScreen.style.display = "block";
+        loadSidebar();
       } else {
-        // User is OUT!
         authScreen.style.display = "flex";
-        chatScreen.style.display = "none";
-        
-        // Reset the chat so the next person doesn't see old messages
-        messagesDiv.innerHTML = ""; 
-        currentRoomRef = null;
-        messageInput.disabled = true;
-        sendBtn.disabled = true;
+        appScreen.style.display = "none";
       }
     });
 
-    // --- 5. OPEN CHAT LOGIC ---
-    document.getElementById("start-chat-btn").addEventListener("click", () => {
-      friendName = document.getElementById("friend-username").value.trim().toLowerCase();
+    // --- 2. SIDEBAR & ROOM MANAGEMENT ---
+    function loadSidebar() {
+      const sidebarRef = isAdmin ? ref(db, 'all_rooms') : ref(db, 'user_rooms/' + myName);
       
-      if (friendName !== "") {
-        messagesDiv.innerHTML = ""; 
-        messageInput.disabled = false; 
-        sendBtn.disabled = false; 
+      onValue(sidebarRef, (snapshot) => {
+        document.getElementById("dm-list").innerHTML = "";
+        document.getElementById("group-list").innerHTML = "";
         
-        const roomName = [myName, friendName].sort().join('_');
-        currentRoomRef = ref(db, "direct_messages/" + roomName);
+        if (snapshot.exists()) {
+          snapshot.forEach((child) => {
+            const roomId = child.key;
+            const roomData = child.val();
+            
+            const div = document.createElement("div");
+            div.className = "room-item";
+            div.innerText = isAdmin ? `[${roomData.type}] ${roomData.name}` : roomData.name;
+            div.onclick = () => openRoom(roomId, roomData.name, roomData.type);
+            
+            if (currentRoomId === roomId) div.classList.add("active");
+            
+            if (roomData.type === 'dm') document.getElementById("dm-list").appendChild(div);
+            else document.getElementById("group-list").appendChild(div);
+          });
+        }
+      });
+    }
 
-        onChildAdded(currentRoomRef, (snapshot) => {
-          const messageData = snapshot.val();
-          const msgDiv = document.createElement("div");
-          msgDiv.classList.add("message");
-          
-          if (messageData.sender === myName) {
-            msgDiv.classList.add("sent");
-            msgDiv.innerText = messageData.text;
-          } else {
-            msgDiv.classList.add("received");
-            msgDiv.innerHTML = `<div class='sender-name'>${messageData.sender}</div>${messageData.text}`;
-          }
-          
-          messagesDiv.appendChild(msgDiv);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight; 
+    // --- MODALS ---
+    let pendingRoomType = "";
+    document.getElementById("new-dm-btn").onclick = () => {
+      pendingRoomType = "dm";
+      document.getElementById("modal-title").innerText = "New Direct Message";
+      document.getElementById("modal-input").placeholder = "Enter exact username...";
+      document.getElementById("room-code-input").style.display = "none";
+      document.getElementById("code-label").style.display = "none";
+      document.getElementById("code-error").style.display = "none";
+      document.getElementById("create-modal").style.display = "flex";
+    };
+
+    document.getElementById("new-group-btn").onclick = () => {
+      pendingRoomType = "group";
+      document.getElementById("modal-title").innerText = "Join or Create Space";
+      document.getElementById("modal-input").placeholder = "Enter group name (e.g. Science)";
+      if(isAdmin) {
+        document.getElementById("room-code-input").style.display = "none";
+        document.getElementById("code-label").style.display = "none";
+      } else {
+        document.getElementById("room-code-input").style.display = "block";
+        document.getElementById("code-label").style.display = "block";
+        document.getElementById("room-code-input").value = "";
+      }
+      document.getElementById("code-error").style.display = "none";
+      document.getElementById("create-modal").style.display = "flex";
+    };
+
+    window.closeModal = () => { document.getElementById("create-modal").style.display = "none"; };
+
+    document.getElementById("modal-submit-btn").onclick = () => {
+      const target = document.getElementById("modal-input").value.trim().toLowerCase();
+      const attemptedCode = document.getElementById("room-code-input").value.trim();
+      
+      if (!target) return;
+      if (pendingRoomType === "dm" && target === myName) { alert("Cannot DM yourself."); return; }
+
+      if (pendingRoomType === "group" && !isAdmin && attemptedCode !== getSecurityCode()) {
+          document.getElementById("code-error").style.display = "block";
+          return;
+      }
+
+      let roomId = "";
+      let roomNameForMe = "";
+
+      if (pendingRoomType === "dm") {
+        roomId = "dm_" + [myName, target].sort().join('_');
+        roomNameForMe = target;
+        set(ref(db, `user_rooms/${target}/${roomId}`), { name: myName, type: "dm" });
+      } else {
+        roomId = "group_" + target;
+        roomNameForMe = target;
+      }
+
+      set(ref(db, `user_rooms/${myName}/${roomId}`), { name: roomNameForMe, type: pendingRoomType });
+      set(ref(db, `all_rooms/${roomId}`), { name: roomNameForMe, type: pendingRoomType });
+
+      closeModal();
+      openRoom(roomId, roomNameForMe, pendingRoomType);
+    };
+
+    // --- 3. CHAT LOGIC ---
+    function openRoom(roomId, name, type) {
+      currentRoomId = roomId;
+      document.getElementById("current-room-name").innerText = isAdmin ? `[ADMIN] ${name}` : name;
+      document.getElementById("current-room-type").innerText = type === 'dm' ? "Direct Message" : "Group Space";
+      
+      document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
+      event?.target?.classList.add('active');
+
+      if (currentRoomRef) off(currentRoomRef);
+      messagesDiv.innerHTML = "";
+      messageInput.disabled = false;
+      sendBtn.disabled = false;
+
+      currentRoomRef = ref(db, "chats/" + roomId);
+      onChildAdded(currentRoomRef, (snap) => {
+        const data = snap.val();
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `message ${data.sender === myName ? 'sent' : 'received'} ${data.system ? 'system' : ''}`;
+        
+        let html = "";
+        if (!data.system && data.sender !== myName) {
+            html += `<div class="sender-name">${data.sender}</div>`;
+        }
+        html += `<div class="message-bubble">${data.text}</div>`;
+        
+        msgDiv.innerHTML = html;
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    }
+
+    sendBtn.onclick = () => {
+      const text = messageInput.value.trim();
+      if (text && currentRoomRef) {
+        
+        if (containsBadWords(text)) {
+            showChatError("Message blocked: Please use kind and appropriate language.");
+            return; 
+        }
+
+        push(currentRoomRef, { sender: myName, text: text });
+        messageInput.value = "";
+      }
+    };
+    messageInput.onkeypress = (e) => { if(e.key === 'Enter') sendBtn.click(); };
+
+    // --- 4. DEVELOPER ADMIN CONTROLS ---
+    document.getElementById("admin-warning-btn").onclick = () => {
+      if (messageInput.value.trim() && currentRoomRef) {
+        push(currentRoomRef, { sender: "SYSTEM", text: `[SYSTEM WARNING]: ${messageInput.value}`, system: true });
+        messageInput.value = "";
+      }
+    };
+
+    document.getElementById("admin-panel-btn").onclick = () => {
+        document.getElementById("admin-modal").style.display = "flex";
+        
+        onValue(ref(db, 'users'), (snap) => {
+            const list = document.getElementById("admin-user-list");
+            list.innerHTML = "";
+            if(snap.exists()){
+                snap.forEach(child => {
+                    const user = child.val();
+                    const username = child.key;
+                    if(user.email === ADMIN_EMAIL) return; 
+                    
+                    const div = document.createElement("div");
+                    div.className = "admin-list-item";
+                    let btnHTML = user.banned 
+                        ? `<button class="unban-btn" onclick="toggleBan('${username}', false)">Unban</button>` 
+                        : `<button class="ban-btn" onclick="toggleBan('${username}', true)">Ban</button>`;
+                    div.innerHTML = `<span><b>${username}</b> (${user.email})</span> ${btnHTML}`;
+                    list.appendChild(div);
+                });
+            }
         });
-      }
-    });
 
-    // --- 6. SEND MESSAGE LOGIC ---
-    sendBtn.addEventListener("click", () => {
-      const text = messageInput.value;
-      if (text.trim() !== "" && currentRoomRef !== null) {
-        push(currentRoomRef, { sender: myName, text: text }); 
-        messageInput.value = ""; 
-      }
-    });
+        onValue(ref(db, 'all_rooms'), (snap) => {
+            const list = document.getElementById("admin-room-list");
+            list.innerHTML = "";
+            if(snap.exists()){
+                snap.forEach(child => {
+                    const room = child.val();
+                    const div = document.createElement("div");
+                    div.className = "admin-list-item";
+                    div.innerHTML = `<span>${child.key}</span> <button style="padding:5px; cursor:pointer;" onclick="adminJoin('${child.key}', '${room.name}', '${room.type}')">Monitor</button>`;
+                    list.appendChild(div);
+                });
+            }
+        });
+    };
 
-    messageInput.addEventListener("keypress", function(event) {
-      if (event.key === "Enter") { sendBtn.click(); }
-    });
+    window.toggleBan = (username, isBanned) => { update(ref(db, 'users/' + username), { banned: isBanned }); };
+    window.adminJoin = (roomId, name, type) => {
+        document.getElementById("admin-modal").style.display = "none";
+        openRoom(roomId, name, type);
+    };
+
   </script>
 </body>
 </html>
+
+
